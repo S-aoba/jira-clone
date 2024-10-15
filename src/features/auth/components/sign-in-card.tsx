@@ -1,3 +1,5 @@
+"use client";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -23,7 +25,7 @@ import { useLogin } from "../api/use-login";
 import { loginSchem } from "../schemas";
 
 export const SigninCard = () => {
-  const { mutate } = useLogin();
+  const { mutate, isPending } = useLogin();
 
   const form = useForm<z.infer<typeof loginSchem>>({
     resolver: zodResolver(loginSchem),
@@ -55,6 +57,7 @@ export const SigninCard = () => {
                   <FormControl>
                     <Input
                       {...field}
+                      disabled={isPending}
                       type="email"
                       placeholder="Enter email address"
                     />
@@ -70,6 +73,7 @@ export const SigninCard = () => {
                   <FormControl>
                     <Input
                       {...field}
+                      disabled={isPending}
                       type="password"
                       placeholder="Enter password"
                     />
@@ -78,7 +82,7 @@ export const SigninCard = () => {
                 </FormItem>
               )}
             />
-            <Button className="w-full" disabled={false} size={"lg"}>
+            <Button className="w-full" disabled={isPending} size={"lg"}>
               Login
             </Button>
           </form>
