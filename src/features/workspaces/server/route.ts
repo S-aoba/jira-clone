@@ -7,49 +7,57 @@ import { createWorkspaceSchema } from "../schemas";
 
 import { sessionMiddleware } from "@/lib/session-middleware";
 
-const app = new Hono().post(
-  "/",
-  zValidator("form", createWorkspaceSchema),
-  sessionMiddleware,
-  async (c) => {
+const app = new Hono()
+  .get("/", sessionMiddleware, async (c) => {
     const databases = c.get("databases");
-    const storage = c.get("storage");
-    const user = c.get("user");
 
-    const { name, image } = c.req.valid("form");
+    const workspaces = await databases.listDocuments(DATABASE_ID, WORKSPACE_ID);
 
-    let uploadedImageUrl: string | undefined;
+    return c.json({ data: workspaces });
+  })
+  .post(
+    "/",
+    zValidator("form", createWorkspaceSchema),
+    sessionMiddleware,
+    async (c) => {
+      const databases = c.get("databases");
+      const storage = c.get("storage");
+      const user = c.get("user");
 
-    if (image instanceof File) {
-      const file = await storage.createFile(
-        IMAGES_BUCKET_ID,
-        ID.unique(),
-        image
-      );
+      const { name, image } = c.req.valid("form");
 
-      const arrayBuffer = await storage.getFilePreview(
-        IMAGES_BUCKET_ID,
-        file.$id
-      );
+      let uploadedImageUrl: string | undefined;
 
-      uploadedImageUrl = `data:image/png;base64,${Buffer.from(
-        arrayBuffer
-      ).toString("base64")}`;
-    }
+      if (image instanceof File) {
+        const file = await storage.createFile(
+          IMAGES_BUCKET_ID,
+          ID.unique(),
+          image
+        );
 
-    const workspace = await databases.createDocument(
-      DATABASE_ID,
-      WORKSPACE_ID,
-      ID.unique(),
-      {
-        name,
-        userId: user.$id,
-        imageUrl: uploadedImageUrl,
+        const arrayBuffer = await storage.getFilePreview(
+          IMAGES_BUCKET_ID,
+          file.$id
+        );
+
+        uploadedImageUrl = `data:image/png;base64,${Buffer.from(
+          arrayBuffer
+        ).toString("base64")}`;
       }
-    );
 
-    return c.json({ data: workspace });
-  }
-);
+      const workspace = await databases.createDocument(
+        DATABASE_ID,
+        WORKSPACE_ID,
+        ID.unique(),
+        {
+          name,
+          userId: user.$id,
+          imageUrl: uploadedImageUrl,
+        }
+      );
+
+      return c.json({ data: workspace });
+    }
+  );
 
 export default app;
