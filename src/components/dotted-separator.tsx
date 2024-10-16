@@ -41,6 +41,6 @@ export const DottedSeparator = ({
           backgroundPosition: "center",
         }}
       />
-     </div>
+    </div>
   );
 };
