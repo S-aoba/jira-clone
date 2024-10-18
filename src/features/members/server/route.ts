@@ -131,7 +131,9 @@ const app = new Hono()
       if (allMembersInWorkspace.total === 1) {
         return c.json({ error: "Can not downgrade the only member" }, 400);
       }
-      await databases.updateDocument(DATABASE_ID, MEMBERS_ID, memberId, [role]);
+      await databases.updateDocument(DATABASE_ID, MEMBERS_ID, memberId, {
+        role,
+      });
 
       return c.json({ data: { $id: memberToUpdate.$id } });
     }
