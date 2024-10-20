@@ -58,6 +58,7 @@ export const CreateProjectForm = ({ onCancel }: CreateProjectFormProps) => {
       {
         onSuccess({ data }) {
           form.reset();
+          router.push(`/workspaces/${workspaceId}/projects/${data.$id}`);
         },
       }
     );
@@ -86,6 +87,7 @@ export const CreateProjectForm = ({ onCancel }: CreateProjectFormProps) => {
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="flex flex-col gap-y-4">
               <FormField
+                disabled={isPending}
                 control={form.control}
                 name="name"
                 render={({ field }) => (
