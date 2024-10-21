@@ -11,7 +11,7 @@ import { getMember } from "@/features/members/utils";
 import { Project } from "@/features/projects/types";
 import { createAdminClient } from "@/lib/appwrite";
 import { createTaskSchema } from "../schemas";
-import { TaskStatus } from "../types";
+import { Task, TaskStatus } from "../types";
 
 const app = new Hono()
   .get(
@@ -76,7 +76,11 @@ const app = new Hono()
         query.push(Query.equal("dueDate", dueDate));
       }
 
-      const tasks = await databases.listDocuments(DATABASE_ID, TASKS_ID, query);
+      const tasks = await databases.listDocuments<Task>(
+        DATABASE_ID,
+        TASKS_ID,
+        query
+      );
 
       const projectIds = tasks.documents.map((task) => task.projectId);
       const assigneeIds = tasks.documents.map((task) => task.assigneeId);
@@ -90,7 +94,7 @@ const app = new Hono()
       const members = await databases.listDocuments(
         DATABASE_ID,
         MEMBERS_ID,
-        assigneeIds.length > 0 ? [Query.contains("$id", projectIds)] : []
+        assigneeIds.length > 0 ? [Query.contains("$id", assigneeIds)] : []
       );
 
       const assignees = await Promise.all(
@@ -114,7 +118,7 @@ const app = new Hono()
         );
 
         return {
-          ...tasks,
+          ...task,
           project,
           assignee,
         };
