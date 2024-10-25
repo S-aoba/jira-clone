@@ -1,16 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { InferRequestType, InferResponseType } from "hono";
-
-import { client } from "@/lib/rpc";
 import { toast } from "sonner";
 
-type ResponseType = InferResponseType<
-  (typeof client.api.members)[":memberId"]["$patch"],
-  200
->;
-type RequestType = InferRequestType<
-  (typeof client.api.members)[":memberId"]["$patch"]
->;
+import { client } from "@/lib/rpc";
+
+type ResponseType = InferResponseType<(typeof client.api.members)[":memberId"]["$patch"], 200>;
+type RequestType = InferRequestType<(typeof client.api.members)[":memberId"]["$patch"]>;
 
 export const useUpdateMember = () => {
   const queryClient = useQueryClient();
@@ -28,7 +23,7 @@ export const useUpdateMember = () => {
 
       return await response.json();
     },
-    onSuccess({ data }) {
+    onSuccess() {
       toast.success("Member updated");
       queryClient.invalidateQueries({ queryKey: ["members"] });
     },

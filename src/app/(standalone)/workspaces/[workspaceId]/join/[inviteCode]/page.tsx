@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 
 import { getCurrent } from "@/features/auth/queries";
-import { JoinWorkspaceForm } from "@/features/workspaces/components/join-workspace-form";
 import { WorkspaceIdJoinClient } from "./client";
 
 const WorkspaceJoinPage = async () => {
@@ -10,9 +9,7 @@ const WorkspaceJoinPage = async () => {
     redirect("/sign-in");
   }
 
-  return (
-    <WorkspaceIdJoinClient />
-  );
+  return <WorkspaceIdJoinClient />;
 };
 
 export default WorkspaceJoinPage;

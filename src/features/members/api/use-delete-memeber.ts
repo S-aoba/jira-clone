@@ -1,8 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { InferRequestType, InferResponseType } from "hono";
+import { toast } from "sonner";
 
 import { client } from "@/lib/rpc";
-import { toast } from "sonner";
 
 type ResponseType = InferResponseType<
   (typeof client.api.members)[":memberId"]["$delete"],
@@ -27,7 +27,7 @@ export const useDeleteMember = () => {
 
       return await response.json();
     },
-    onSuccess({ data }) {
+    onSuccess() {
       toast.success("Member deleted");
       queryClient.invalidateQueries({ queryKey: ["members"] });
     },

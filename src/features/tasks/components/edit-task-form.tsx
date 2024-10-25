@@ -1,36 +1,24 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+
+import { cn } from "@/lib/utils";
 
 import { DottedSeparator } from "@/components/dotted-separator";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
 import { DatePicker } from "@/components/date-picker";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MemberAvatar } from "@/features/members/components/member-avatar";
 import { ProjectAvatar } from "@/features/projects/components/project-avatar";
-import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
-import { cn } from "@/lib/utils";
+
 import { useUpdateTask } from "../api/use-update-task";
+
 import { createTaskSchema } from "../schemas";
 import { Task, TaskStatus } from "../types";
 
@@ -41,26 +29,14 @@ interface EditTaskFormProps {
   initialValues: Task;
 }
 
-export const EditTaskForm = ({
-  onCancel,
-  projectOptions,
-  memberOptions,
-  initialValues,
-}: EditTaskFormProps) => {
-  const workspaceId = useWorkspaceId();
-  const router = useRouter();
-
+export const EditTaskForm = ({ onCancel, projectOptions, memberOptions, initialValues }: EditTaskFormProps) => {
   const { mutate, isPending } = useUpdateTask();
 
   const form = useForm<z.infer<typeof createTaskSchema>>({
-    resolver: zodResolver(
-      createTaskSchema.omit({ workspaceId: true, description: true })
-    ),
+    resolver: zodResolver(createTaskSchema.omit({ workspaceId: true, description: true })),
     defaultValues: {
       ...initialValues,
-      dueDate: initialValues.dueDate
-        ? new Date(initialValues.dueDate)
-        : undefined,
+      dueDate: initialValues.dueDate ? new Date(initialValues.dueDate) : undefined,
     },
   });
 
@@ -75,7 +51,7 @@ export const EditTaskForm = ({
           form.reset();
           onCancel?.();
         },
-      }
+      },
     );
   };
 
@@ -126,10 +102,7 @@ export const EditTaskForm = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Asignee</FormLabel>
-                    <Select
-                      defaultValue={field.value}
-                      onValueChange={field.onChange}
-                    >
+                    <Select defaultValue={field.value} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select assignee" />
@@ -140,10 +113,7 @@ export const EditTaskForm = ({
                         {memberOptions.map((member) => (
                           <SelectItem key={member.id} value={member.id}>
                             <div className="flex items-center gap-x-2">
-                              <MemberAvatar
-                                className="size-8"
-                                name={member.name}
-                              />
+                              <MemberAvatar className="size-8" name={member.name} />
                               {member.name}
                             </div>
                           </SelectItem>
@@ -160,10 +130,7 @@ export const EditTaskForm = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Status</FormLabel>
-                    <Select
-                      defaultValue={field.value}
-                      onValueChange={field.onChange}
-                    >
+                    <Select defaultValue={field.value} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select status" />
@@ -171,15 +138,9 @@ export const EditTaskForm = ({
                       </FormControl>
                       <FormMessage />
                       <SelectContent>
-                        <SelectItem value={TaskStatus.BACKLOG}>
-                          Backlog
-                        </SelectItem>
-                        <SelectItem value={TaskStatus.IN_PROGRESS}>
-                          In Progress
-                        </SelectItem>
-                        <SelectItem value={TaskStatus.IN_REVIEW}>
-                          In Review
-                        </SelectItem>
+                        <SelectItem value={TaskStatus.BACKLOG}>Backlog</SelectItem>
+                        <SelectItem value={TaskStatus.IN_PROGRESS}>In Progress</SelectItem>
+                        <SelectItem value={TaskStatus.IN_REVIEW}>In Review</SelectItem>
                         <SelectItem value={TaskStatus.TODO}>Todo</SelectItem>
                         <SelectItem value={TaskStatus.DONE}>Done</SelectItem>
                       </SelectContent>
@@ -194,10 +155,7 @@ export const EditTaskForm = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Project</FormLabel>
-                    <Select
-                      defaultValue={field.value}
-                      onValueChange={field.onChange}
-                    >
+                    <Select defaultValue={field.value} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select project" />
@@ -208,11 +166,7 @@ export const EditTaskForm = ({
                         {projectOptions.map((project) => (
                           <SelectItem key={project.id} value={project.id}>
                             <div className="flex items-center gap-x-2">
-                              <ProjectAvatar
-                                className="size-8"
-                                name={project.name}
-                                image={project.imageUrl}
-                              />
+                              <ProjectAvatar className="size-8" name={project.name} image={project.imageUrl} />
                               {project.name}
                             </div>
                           </SelectItem>
@@ -225,14 +179,7 @@ export const EditTaskForm = ({
             </div>
             <DottedSeparator className="py-7" />
             <div className="flex items-center justify-between">
-              <Button
-                type="button"
-                size={"lg"}
-                variant={"secondary"}
-                onClick={onCancel}
-                disabled={isPending}
-                className={cn(!onCancel && "invisible")}
-              >
+              <Button type="button" size={"lg"} variant={"secondary"} onClick={onCancel} disabled={isPending} className={cn(!onCancel && "invisible")}>
                 Cancel
               </Button>
               <Button type="submit" size={"lg"} disabled={isPending}>

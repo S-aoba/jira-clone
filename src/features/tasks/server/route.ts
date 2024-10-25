@@ -3,13 +3,13 @@ import { Hono } from "hono";
 import { ID, Query } from "node-appwrite";
 import { z } from "zod";
 
+import { createAdminClient } from "@/lib/appwrite";
 import { DATABASE_ID, MEMBERS_ID, PROJECTS_ID, TASKS_ID } from "@/config";
 import { sessionMiddleware } from "@/lib/session-middleware";
 
 import { getMember } from "@/features/members/utils";
-
 import { Project } from "@/features/projects/types";
-import { createAdminClient } from "@/lib/appwrite";
+
 import { createTaskSchema } from "../schemas";
 import { Task, TaskStatus } from "../types";
 
@@ -19,11 +19,7 @@ const app = new Hono()
     const databases = c.get("databases");
     const { taskId } = c.req.param();
 
-    const task = await databases.getDocument<Task>(
-      DATABASE_ID,
-      TASKS_ID,
-      taskId
-    );
+    const task = await databases.getDocument<Task>(DATABASE_ID, TASKS_ID, taskId);
 
     const member = await getMember({
       databases,
@@ -51,15 +47,14 @@ const app = new Hono()
         status: z.nativeEnum(TaskStatus).nullish(),
         search: z.string().nullish(),
         dueDate: z.string().nullish(),
-      })
+      }),
     ),
     async (c) => {
       const { users } = await createAdminClient();
       const user = c.get("user");
       const databases = c.get("databases");
 
-      const { status, workspaceId, projectId, search, dueDate, assigneeId } =
-        c.req.valid("query");
+      const { status, workspaceId, projectId, search, dueDate, assigneeId } = c.req.valid("query");
 
       const member = await getMember({
         databases,
@@ -71,10 +66,7 @@ const app = new Hono()
         return c.json({ error: "Unauthorized" }, 401);
       }
 
-      const query = [
-        Query.equal("workspaceId", workspaceId),
-        Query.orderDesc("$createdAt"),
-      ];
+      const query = [Query.equal("workspaceId", workspaceId), Query.orderDesc("$createdAt")];
 
       if (projectId) {
         console.log("projectId: ", projectId);
@@ -101,26 +93,14 @@ const app = new Hono()
         query.push(Query.equal("dueDate", dueDate));
       }
 
-      const tasks = await databases.listDocuments<Task>(
-        DATABASE_ID,
-        TASKS_ID,
-        query
-      );
+      const tasks = await databases.listDocuments<Task>(DATABASE_ID, TASKS_ID, query);
 
       const projectIds = tasks.documents.map((task) => task.projectId);
       const assigneeIds = tasks.documents.map((task) => task.assigneeId);
 
-      const projects = await databases.listDocuments<Project>(
-        DATABASE_ID,
-        PROJECTS_ID,
-        projectIds.length > 0 ? [Query.contains("$id", projectIds)] : []
-      );
+      const projects = await databases.listDocuments<Project>(DATABASE_ID, PROJECTS_ID, projectIds.length > 0 ? [Query.contains("$id", projectIds)] : []);
 
-      const members = await databases.listDocuments(
-        DATABASE_ID,
-        MEMBERS_ID,
-        assigneeIds.length > 0 ? [Query.contains("$id", assigneeIds)] : []
-      );
+      const members = await databases.listDocuments(DATABASE_ID, MEMBERS_ID, assigneeIds.length > 0 ? [Query.contains("$id", assigneeIds)] : []);
 
       const assignees = await Promise.all(
         members.documents.map(async (member) => {
@@ -131,16 +111,12 @@ const app = new Hono()
             name: user.name,
             email: user.email,
           };
-        })
+        }),
       );
 
       const poplatedTasks = tasks.documents.map((task) => {
-        const project = projects.documents.find(
-          (project) => project.$id === task.projectId
-        );
-        const assignee = assignees.find(
-          (assignee) => assignee.$id === task.assigneeId
-        );
+        const project = projects.documents.find((project) => project.$id === task.projectId);
+        const assignee = assignees.find((assignee) => assignee.$id === task.assigneeId);
 
         return {
           ...task,
@@ -155,118 +131,76 @@ const app = new Hono()
           documents: poplatedTasks,
         },
       });
-    }
+    },
   )
-  .post(
-    "/",
-    sessionMiddleware,
-    zValidator("json", createTaskSchema),
-    async (c) => {
-      const user = c.get("user");
-      const databases = c.get("databases");
-      const { name, status, workspaceId, projectId, dueDate, assigneeId } =
-        c.req.valid("json");
+  .post("/", sessionMiddleware, zValidator("json", createTaskSchema), async (c) => {
+    const user = c.get("user");
+    const databases = c.get("databases");
+    const { name, status, workspaceId, projectId, dueDate, assigneeId } = c.req.valid("json");
 
-      const member = await getMember({
-        databases,
-        workspaceId,
-        userId: user.$id,
-      });
+    const member = await getMember({
+      databases,
+      workspaceId,
+      userId: user.$id,
+    });
 
-      if (!member) {
-        return c.json({ error: "Unauthorized" }, 401);
-      }
-
-      const hignestPositionTask = await databases.listDocuments(
-        DATABASE_ID,
-        TASKS_ID,
-        [
-          Query.equal("status", status),
-          Query.equal("workspaceId", workspaceId),
-          Query.orderDesc("position"),
-          Query.limit(1),
-        ]
-      );
-
-      const newPosition =
-        hignestPositionTask.documents.length > 0
-          ? hignestPositionTask.documents[0].position + 1000
-          : 1000;
-
-      const task = await databases.createDocument(
-        DATABASE_ID,
-        TASKS_ID,
-        ID.unique(),
-        {
-          name,
-          status,
-          workspaceId,
-          projectId,
-          dueDate,
-          assigneeId,
-          position: newPosition,
-        }
-      );
-
-      return c.json({ data: task });
+    if (!member) {
+      return c.json({ error: "Unauthorized" }, 401);
     }
-  )
-  .patch(
-    "/:taskId",
-    sessionMiddleware,
-    zValidator("json", createTaskSchema.partial()),
-    async (c) => {
-      const user = c.get("user");
-      const databases = c.get("databases");
-      const { name, status, description, projectId, dueDate, assigneeId } =
-        c.req.valid("json");
 
-      const { taskId } = c.req.param();
+    const hignestPositionTask = await databases.listDocuments(DATABASE_ID, TASKS_ID, [Query.equal("status", status), Query.equal("workspaceId", workspaceId), Query.orderDesc("position"), Query.limit(1)]);
 
-      const existingTask = await databases.getDocument<Task>(
-        DATABASE_ID,
-        TASKS_ID,
-        taskId
-      );
+    const newPosition = hignestPositionTask.documents.length > 0 ? hignestPositionTask.documents[0].position + 1000 : 1000;
 
-      const member = await getMember({
-        databases,
-        workspaceId: existingTask.workspaceId,
-        userId: user.$id,
-      });
+    const task = await databases.createDocument(DATABASE_ID, TASKS_ID, ID.unique(), {
+      name,
+      status,
+      workspaceId,
+      projectId,
+      dueDate,
+      assigneeId,
+      position: newPosition,
+    });
 
-      if (!member) {
-        return c.json({ error: "Unauthorized" }, 401);
-      }
+    return c.json({ data: task });
+  })
+  .patch("/:taskId", sessionMiddleware, zValidator("json", createTaskSchema.partial()), async (c) => {
+    const user = c.get("user");
+    const databases = c.get("databases");
+    const { name, status, description, projectId, dueDate, assigneeId } = c.req.valid("json");
 
-      const task = await databases.updateDocument<Task>(
-        DATABASE_ID,
-        TASKS_ID,
-        taskId,
-        {
-          name,
-          status,
-          projectId,
-          dueDate,
-          assigneeId,
-          description,
-        }
-      );
+    const { taskId } = c.req.param();
 
-      return c.json({ data: task });
+    const existingTask = await databases.getDocument<Task>(DATABASE_ID, TASKS_ID, taskId);
+
+    const member = await getMember({
+      databases,
+      workspaceId: existingTask.workspaceId,
+      userId: user.$id,
+    });
+
+    if (!member) {
+      return c.json({ error: "Unauthorized" }, 401);
     }
-  )
+
+    const task = await databases.updateDocument<Task>(DATABASE_ID, TASKS_ID, taskId, {
+      name,
+      status,
+      projectId,
+      dueDate,
+      assigneeId,
+      description,
+    });
+
+    return c.json({ data: task });
+  })
   .get("/:taskId", sessionMiddleware, async (c) => {
     const currentUser = c.get("user");
     const databases = c.get("databases");
     const { users } = await createAdminClient();
     const { taskId } = c.req.param();
 
-    const task = await databases.getDocument<Task>(
-      DATABASE_ID,
-      TASKS_ID,
-      taskId
-    );
+    const task = await databases.getDocument<Task>(DATABASE_ID, TASKS_ID, taskId);
 
     const currentMember = await getMember({
       databases,
@@ -278,17 +212,9 @@ const app = new Hono()
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const project = await databases.getDocument<Project>(
-      DATABASE_ID,
-      PROJECTS_ID,
-      task.projectId
-    );
+    const project = await databases.getDocument<Project>(DATABASE_ID, PROJECTS_ID, task.projectId);
 
-    const member = await databases.getDocument(
-      DATABASE_ID,
-      MEMBERS_ID,
-      task.assigneeId
-    );
+    const member = await databases.getDocument(DATABASE_ID, MEMBERS_ID, task.assigneeId);
 
     const user = await users.get(member.userId);
 
@@ -317,34 +243,32 @@ const app = new Hono()
             $id: z.string(),
             status: z.nativeEnum(TaskStatus),
             position: z.number().int().positive().min(1000).max(1_000_000),
-          })
+          }),
         ),
-      })
+      }),
     ),
     async (c) => {
       const databases = c.get("databases");
       const user = c.get("user");
       const { tasks } = c.req.valid("json");
 
-      const tasksToUpdate = await databases.listDocuments<Task>(
-        DATABASE_ID,
-        TASKS_ID,
-        [
-          Query.contains(
-            "$id",
-            tasks.map((task) => task.$id)
-          ),
-        ]
-      );
+      const tasksToUpdate = await databases.listDocuments<Task>(DATABASE_ID, TASKS_ID, [
+        Query.contains(
+          "$id",
+          tasks.map((task) => task.$id),
+        ),
+      ]);
 
-      const workspaceIds = new Set(
-        tasksToUpdate.documents.map((task) => task.workspaceId)
-      );
+      const workspaceIds = new Set(tasksToUpdate.documents.map((task) => task.workspaceId));
       if (workspaceIds.size !== 1) {
         return c.json({ error: "All tasks must belong to the same workspace" });
       }
 
-      const workspaceId = workspaceIds.values().next().value!;
+      const workspaceId = workspaceIds.values().next().value;
+
+      if (!workspaceId) {
+        return c.json({ error: "Workspace ID is required" }, 400);
+      }
 
       const member = await getMember({
         databases,
@@ -364,10 +288,10 @@ const app = new Hono()
             status,
             position,
           });
-        })
+        }),
       );
 
       return c.json({ data: updatedTasks });
-    }
+    },
   );
 export default app;
