@@ -73,8 +73,8 @@ export const TaskList = ({ data, total }: TaskListProps) => {
         <DottedSeparator className="my-4" />
         <ul className="flex flex-col gap-y-4">
           {data.map((task) => (
-            <li key={task.id}>
-              <Link href={`/workspaces/${workspaceId}/tasks/${task.id}`}>
+            <li key={task.$id}>
+              <Link href={`/workspaces/${workspaceId}/tasks/${task.$id}`}>
                 <Card className="shadow-none rounded-lg hover:opacity-75 transition">
                   <CardContent className="p-4">
                     <p className="text-lg font-medium truncate">{task.name}</p>
@@ -123,7 +123,7 @@ export const ProjectList = ({ data, total }: ProjectListProps) => {
         <ul className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {data.map((project) => (
             <li key={project.id}>
-              <Link href={`/workspaces/${workspaceId}/projects/${project.id}`}>
+              <Link href={`/workspaces/${workspaceId}/projects/${project.$id}`}>
                 <Card className="shadow-none rounded-lg hover:opacity-75 transition">
                   <CardContent className="p-4 flex items-center gap-x-2.5">
                     <ProjectAvatar className="size-12" fallbackClassName="text-lg" name={project.name} image={project.imageUrl} />
@@ -162,7 +162,7 @@ export const MemberList = ({ data, total }: MemberListProps) => {
         <DottedSeparator className="my-4" />
         <ul className="gird grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {data.map((member) => (
-            <li key={member.id}>
+            <li key={member.$id}>
               <Card className="shadow-none rounded-lg overflow-hidden">
                 <CardContent className="p-3 flex flex-col items-center gap-x-2">
                   <MemberAvatar className="size-12" fallbackClassName="text-lg" name={member.name} />
