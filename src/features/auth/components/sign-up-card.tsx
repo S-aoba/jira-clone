@@ -7,23 +7,13 @@ import { FaGithub } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { z } from "zod";
 
+import { signUpWithGithub, signUpWithGoogle } from "@/lib/oauth";
+
 import { DottedSeparator } from "@/components/dotted-separator";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
 import { useRegister } from "../api/use-register";
@@ -71,12 +61,7 @@ export const SignUpCard = () => {
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Input
-                      {...field}
-                      disabled={isPending}
-                      type="text"
-                      placeholder="Enter name"
-                    />
+                    <Input {...field} disabled={isPending} type="text" placeholder="Enter name" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -87,12 +72,7 @@ export const SignUpCard = () => {
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Input
-                      {...field}
-                      disabled={isPending}
-                      type="email"
-                      placeholder="Enter email address"
-                    />
+                    <Input {...field} disabled={isPending} type="email" placeholder="Enter email address" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -103,12 +83,7 @@ export const SignUpCard = () => {
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Input
-                      {...field}
-                      disabled={isPending}
-                      type="password"
-                      placeholder="Enter password"
-                    />
+                    <Input {...field} disabled={isPending} type="password" placeholder="Enter password" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -124,21 +99,11 @@ export const SignUpCard = () => {
         <DottedSeparator />
       </div>
       <CardContent className="p-7 flex flex-col gap-y-4">
-        <Button
-          variant={"secondary"}
-          size={"lg"}
-          className="w-full"
-          disabled={false}
-        >
+        <Button onClick={() => signUpWithGoogle()} variant={"secondary"} size={"lg"} className="w-full" disabled={true}>
           <FcGoogle className="mr-2 size-5" />
           Login with Google
         </Button>
-        <Button
-          variant={"secondary"}
-          size={"lg"}
-          className="w-full"
-          disabled={false}
-        >
+        <Button onClick={() => signUpWithGithub()} variant={"secondary"} size={"lg"} className="w-full" disabled={true}>
           <FaGithub className="mr-2 size-5" />
           Login with Github
         </Button>
